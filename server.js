@@ -101,7 +101,13 @@ http.createServer(function(request, response) {
 	console.log("id:\t\t" + id);
 
 	if(id != null) {
-		r = resources[resource][id];
+		resources[resource].every(function(item){
+			if(item.id == id) {
+				r = item;
+				return false;
+			}
+			return true;
+		});
 	} else {
 		r = resources[resource];
 	}
