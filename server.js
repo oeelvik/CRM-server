@@ -51,77 +51,111 @@ var resources = {
 }
 
 http.createServer(function(request, response) {
-	// When dealing with CORS (Cross-Origin Resource Sharing)
-	// requests, the client should pass-through its origin (the
-	// requesting domain). We should either echo that or use *
-	// if the origin was not passed.
+
+
+	console.log();
+	console.log("------------------" + request.method.toUpperCase() + ": " + request.url + "-------------------");
+	
 	var origin = (request.headers.origin || "*");
-	 
-	 
-	// Check to see if this is a security check by the browser to
-	// test the availability of the API for the client. If the
-	// method is OPTIONS, the browser is check to see to see what
-	// HTTP methods (and properties) have been granted to the
-	// client.
-	if (request.method.toUpperCase() === "OPTIONS"){
-		 
-		 
-		// Echo back the Origin (calling domain) so that the
-		// client is granted access to make subsequent requests
-		// to the API.
-		response.writeHead(
-			"204",
-			"No Content",
-			{
-				"access-control-allow-origin": origin,
-				"access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-				"access-control-allow-headers": "x-requested-with",
-				"access-control-max-age": 1728000, // Seconds.
-				"content-length": 01728000
-			}
-		);
-		 
-		// End the response - we're not sending back any content.
-		return( response.end() );
-	 
-	 
-	}
-
-
-	var r = null;
-
-
-
 	var req = request.url.split('/');
 	var resource = req[1];
 	var id = req[2];
 
-	console.log("Url:\t\t" + request.url);
 	console.log("resource:\t" + resource);
 	console.log("id:\t\t" + id);
 
-	if(id != null) {
-		resources[resource].every(function(item){
-			if(item.id == id) {
-				r = item;
-				return false;
-			}
-			return true;
-		});
-	} else {
-		r = resources[resource];
-	}
+	switch(request.method.toUpperCase()) {
+		case "OPTIONS":
+			// Echo back the Origin (calling domain) so that the
+			// client is granted access to make subsequent requests
+			// to the API.
+			response.writeHead(
+				"204",
+				"No Content",
+				{
+					"access-control-allow-origin": origin,
+					"access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+					"access-control-allow-headers": "x-requested-with, content-type",
+					"access-control-max-age": 1728000, // Seconds.
+					"content-length": 01728000
+				}
+			);
+			 
+			// End the response - we're not sending back any content.
+			return( response.end() );
+			break;
 
-	if (r != null) {
-		response.writeHead(200, {
-			'Content-Type': 'application/json',
-			'Access-Control-Allow-Origin': origin
-		});
-		response.write(JSON.stringify(r));
-		response.end();
-	} else {
-		response.writeHead(404);
-		response.end();
+		case "POST":
+		case "PUT":
+			if(resource === null) {
+				response.writeHead(404);
+				return( response.end() );
+			}
+			request.on('data', function(chunk) {
+
+				var record = JSON.parse(chunk);
+				console.log("Received record:");
+				console.log(record);
+
+
+				var i = null;
+				if(id == null) {
+					id = resources[resource][resources[resource].length - 1].id + 1;
+					console.log("Assigned id: " + id);
+					record.id = id;
+				} else {
+					resources[resource].every(function(item, index){
+						if(item.id == id) {
+							i = index;
+							return false;
+						}
+						return true;
+					});
+				}
+
+				if ( i == null) {
+					resources[resource][resources[resource].length] = record;
+				}  else {
+					resources[resource][i] = record;
+				}
+
+				response.writeHead(200, {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': origin
+				});
+				response.write(JSON.stringify(record));
+				response.end();
+
+			});
+			break;
+		case "GET":
+		default:
+			var r = resources;
+			if (resource != null) {
+				r = r[resource];
+				if (id != null) {
+					r.every(function(item){
+						if(item.id == id) {
+							r = item;
+							return false;
+						}
+						return true;
+					});
+				}
+			}
+
+			if (r != null) {
+				response.writeHead(200, {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': origin
+				});
+				response.write(JSON.stringify(r));
+				response.end();
+			} else {
+				response.writeHead(404);
+				response.end();
+			}
+
 	}
 }).listen(8081);
 console.log('Server running at port 8081');
