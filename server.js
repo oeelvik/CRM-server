@@ -125,15 +125,14 @@ http.createServer(function(request, response) {
 				});
 				response.write(JSON.stringify(record));
 				response.end();
-
 			});
 			break;
 		case "GET":
 		default:
 			var r = resources;
-			if (resource != null) {
+			if (resource != null && resource.length > 0) {
 				r = r[resource];
-				if (id != null) {
+				if (id != null && resource.length > 0) {
 					r.every(function(item){
 						if(item.id == id) {
 							r = item;
