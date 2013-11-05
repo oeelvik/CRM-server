@@ -100,7 +100,13 @@ http.createServer(function(request, response) {
 
 				var i = null;
 				if(id == null) {
-					id = resources[resource][resources[resource].length - 1].id + 1;
+					if(resources[resource] == null) {
+						resources[resource] = [];
+						id = 1;
+					} else {
+						id = resources[resource][resources[resource].length - 1].id + 1;
+					}
+
 					console.log("Assigned id: " + id);
 					record.id = id;
 				} else {
@@ -132,6 +138,9 @@ http.createServer(function(request, response) {
 			var r = resources;
 			if (resource != null && resource.length > 0) {
 				r = r[resource];
+				if (r == null || r.length < 1 ) {
+					r = [];
+				}
 				if (id != null && resource.length > 0) {
 					r.every(function(item){
 						if(item.id == id) {
@@ -140,6 +149,9 @@ http.createServer(function(request, response) {
 						}
 						return true;
 					});
+					if (r == null || r.length < 1 ) {
+						r = {};
+					}
 				}
 			}
 
