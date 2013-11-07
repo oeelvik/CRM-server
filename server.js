@@ -133,6 +133,36 @@ http.createServer(function(request, response) {
 				response.end();
 			});
 			break;
+		case "DELETE":
+			if(resource == null || id == null || resources[resource] == null) {
+				response.writeHead(404);
+				return( response.end() );
+			}
+
+			var i = null;
+			resources[resource].every(function(item, index){
+				if(item.id == id) {
+					i = index;
+					return false;
+				}
+				return true;
+			});
+
+			if ( i == null) {
+				response.writeHead(404);
+				return( response.end() );
+			}  else {
+				resources[resource].splice(i, 1);
+			}
+
+			response.writeHead(200, 
+				"No Content",
+				{
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': origin
+				});
+			return ( response.end() );
+			break;
 		case "GET":
 		default:
 			var r = resources;
